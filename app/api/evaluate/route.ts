@@ -1,8 +1,6 @@
 
 
 import { NextRequest, NextResponse } from 'next/server'
-import { readFile } from 'fs/promises'
-import { join } from 'path'
 
 export const dynamic = 'force-dynamic'
 
@@ -92,16 +90,18 @@ Asegúrate de que todas las puntuaciones sean números enteros entre 0 y 100, y 
 
 export async function POST(req: NextRequest) {
   try {
-    const { filename, language } = await req.json()
+    const { fileData, filename, language } = await req.json()
+
+    if (!fileData) {
+      return NextResponse.json({ message: 'Datos de archivo requeridos' }, { status: 400 })
+    }
 
     if (!filename) {
       return NextResponse.json({ message: 'Nombre de archivo requerido' }, { status: 400 })
     }
 
-    // Read PDF file
-    const filePath = join(process.cwd(), 'uploads', filename)
-    const fileBuffer = await readFile(filePath)
-    const base64String = fileBuffer.toString('base64')
+    // Use the base64 data directly (no file system access needed)
+    const base64String = fileData
 
     // Prepare messages for LLM API
     const messages = [

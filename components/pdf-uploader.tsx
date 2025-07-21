@@ -76,13 +76,14 @@ export function PdfUploader({ onStartEvaluation, onEvaluationComplete }: PdfUplo
       setEvaluating(true)
       setProgress('Analizando contenido...')
 
-      // Start evaluation with filename
+      // Start evaluation with file data
       const evaluateResponse = await fetch('/api/evaluate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
+          fileData: uploadData.fileData,
           filename: uploadData.filename,
           language
         })

@@ -1,8 +1,5 @@
 
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
-import { existsSync } from 'fs'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,29 +21,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'El archivo es muy grande' }, { status: 400 })
     }
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = join(process.cwd(), 'uploads')
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true })
-    }
-
-    // Generate unique filename
-    const uniqueId = Date.now() + '-' + Math.random().toString(36).substring(2)
-    const filename = `${uniqueId}.pdf`
-    const filePath = join(uploadsDir, filename)
-
-    // Save file
+    // Convert file to base64 for temporary storage
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-    await writeFile(filePath, buffer)
+    const base64String = buffer.toString('base64')
 
-    // Generate evaluation ID without database
+    // Generate unique evaluation ID
+    const uniqueId = Date.now() + '-' + Math.random().toString(36).substring(2)
     const evaluationId = `eval_${uniqueId}`
 
     return NextResponse.json({
-      message: 'Archivo subido exitosamente',
+      message: 'Archivo procesado exitosamente',
       evaluationId,
-      filename,
+      fileData: base64String,
+      filename: file.name,
       language
     })
 
