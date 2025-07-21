@@ -100,8 +100,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Nombre de archivo requerido' }, { status: 400 })
     }
 
+    if (!process.env.ABACUSAI_API_KEY) {
+      console.error('ABACUSAI_API_KEY not configured')
+      return NextResponse.json({ message: 'API key no configurada' }, { status: 500 })
+    }
+
     // Use the base64 data directly (no file system access needed)
     const base64String = fileData
+
+    // Verify base64 string is not too long (AbacusAI limits)
+    if (base64String.length > 10000000) { // ~7MB limit
+      return NextResponse.json({ message: 'Archivo muy grande para procesar' }, { status: 413 })
+    }
+
+    console.log('Processing file:', filename, 'Base64 length:', base64String.length)
 
     // Prepare messages for LLM API
     const messages = [
@@ -131,16 +143,19 @@ export async function POST(req: NextRequest) {
         'Authorization': `Bearer ${process.env.ABACUSAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-mini',
+        model: 'gpt-4o-mini', // Cambio de modelo
         messages: messages,
         stream: true,
-        max_tokens: 3000,
+        max_tokens: 4000, // Aumentado para respuestas más largas
+        temperature: 0.1, // Añadida consistencia
         response_format: { type: "json_object" }
       }),
     })
 
     if (!response.ok) {
-      throw new Error('Error en la API de evaluación')
+      const errorText = await response.text()
+      console.error('API Error:', response.status, errorText)
+      throw new Error(`Error en la API de evaluación: ${response.status} - ${errorText}`)
     }
 
     const encoder = new TextEncoder()
