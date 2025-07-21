@@ -143,11 +143,10 @@ export async function POST(req: NextRequest) {
         'Authorization': `Bearer ${process.env.ABACUSAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini', // Cambio de modelo
+        model: 'gpt-4.1-mini',
         messages: messages,
         stream: true,
-        max_tokens: 4000, // Aumentado para respuestas más largas
-        temperature: 0.1, // Añadida consistencia
+        max_tokens: 4000,
         response_format: { type: "json_object" }
       }),
     })
